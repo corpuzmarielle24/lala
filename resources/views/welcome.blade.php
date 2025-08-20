@@ -365,21 +365,33 @@
         </div>
         <div class="row">
             @php
-                // Fetch the most recent subscription for the authenticated user
-                $subscription = DB::table('subscriptions')
-                    ->select('subscription_type', 'amount', 'date', 
-                             DB::raw('DATE_ADD(date, INTERVAL 1 MONTH) AS expiration'))
-                    ->where('user_id', auth()->id())
-                    ->whereIn('subscription_type', ['Basic Plan', 'Professional Plan', 'Elite Plan'])
-                    ->orderBy('id', 'desc')
-                    ->first();
+                // Initialize variables
+                $subscription = null;
+                $activePlan = null;
+                
+                try {
+                    // Fetch the most recent subscription for the authenticated user
+                    if (auth()->check()) {
+                        $subscription = DB::table('subscriptions')
+                            ->select('subscription_type', 'amount', 'date', 
+                                     DB::raw('DATE_ADD(date, INTERVAL 1 MONTH) AS expiration'))
+                            ->where('user_id', auth()->id())
+                            ->whereIn('subscription_type', ['Basic Plan', 'Professional Plan', 'Elite Plan'])
+                            ->orderBy('id', 'desc')
+                            ->first();
 
-                // Check if there is an active subscription
-                $currentDate = now();
-                $isExpired = !$subscription || $currentDate->greaterThan($subscription->expiration);
+                        // Check if there is an active subscription
+                        $currentDate = now();
+                        $isExpired = !$subscription || $currentDate->greaterThan($subscription->expiration);
 
-                // Determine the active plan type
-                $activePlan = !$isExpired ? $subscription->subscription_type : null;
+                        // Determine the active plan type
+                        $activePlan = !$isExpired ? $subscription->subscription_type : null;
+                    }
+                } catch (Exception $e) {
+                    // Handle database connection issues gracefully
+                    $subscription = null;
+                    $activePlan = null;
+                }
             @endphp
 
             <!-- Basic Plan -->
@@ -405,7 +417,8 @@
                             <li>Single-User Access: Limited to one user for exam creation and review analysis.</li>
                         </ul>
                   
-                            <form action="{{ route('paypal.create') }}" method="GET">
+                            <form action="{{ route('paypal.create') }}" method="POST">
+                                @csrf
                                 <input type="hidden" name="amount" value="50">
                                 <input type="hidden" name="subscription_type" value="Basic Plan">
                                 <button type="submit" class="borders-btn">Get Started</button>
@@ -438,7 +451,8 @@
                             <li>Real-Time Collaboration: Collaborate with up to 5 users on exam creation and review analysis.</li>
                         </ul>
              
-                            <form action="{{ route('paypal.create') }}" method="GET">
+                            <form action="{{ route('paypal.create') }}" method="POST">
+                                @csrf
                                 <input type="hidden" name="amount" value="150">
                                 <input type="hidden" name="subscription_type" value="Professional Plan">
                                 <button type="submit" class="borders-btn">Get Started</button>
@@ -471,7 +485,8 @@
                             <li>Real-Time Collaboration: Unlimited user access with advanced collaboration tools and features.</li>
                         </ul>
                   
-                            <form action="{{ route('paypal.create') }}" method="GET">
+                            <form action="{{ route('paypal.create') }}" method="POST">
+                                @csrf
                                 <input type="hidden" name="amount" value="350">
                                 <input type="hidden" name="subscription_type" value="Elite Plan">
                                 <button type="submit" class="borders-btn">Get Started</button>

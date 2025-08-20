@@ -26,29 +26,31 @@
     <link rel="stylesheet" href="{{ asset('ai/assets/css/style.css')}}">
 
     <style>
-        /* Ensure all cards have the same height */
-        .single-card {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+        /* Modern responsive design */
+        @media (max-width: 768px) {
+            .grid-two {
+                grid-template-columns: 1fr !important;
+            }
+            .grid-three {
+                grid-template-columns: 1fr !important;
+            }
         }
-
-        /* Ensure the card content doesn't overflow */
-        .card-top, .card-mid, .card-bottom {
-            margin: 0;
+        
+        /* Smooth animations */
+        * {
+            transition: all 0.2s ease !important;
         }
-
-        /* Style list items to be left-aligned with bullets */
-        .card-bottom ul {
-            list-style-type: disc; /* Adds bullet points */
-            padding-left: 20px; /* Adjust this value as needed */
-            text-align: left; /* Ensure text aligns to the left */
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-
-        /* Optional: Add some spacing between list items */
-        .card-bottom ul li {
-            margin-bottom: 10px;
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
         }
     </style>
 </head>
@@ -101,15 +103,13 @@
     </header>
     <main>
         <!-- Slider Area Start-->
-        <div class="slider-area slider-bg " style="padding-bottom:20px">
+        <div class="slider-area slider-bg" style="min-height: 100vh; padding: 100px 0 40px 0;">
             <div class="slider-active">
                 <!-- Single Slider -->
-                <div class="single-slider d-flex  slider-height ">
-                    <div class="container " style="margin-top:150px">
-                        <div class="container ">
+                <div class="single-slider">
+                    <div class="container" style="max-width: 900px;">
+                        <div class="container">
                             @if(auth()->check())
-                                <h2 style="color: white;">Your Subscriptions</h2>
-
                                 @php
                                     // Fetch the most recent subscription for the authenticated user
                                     $subscription = DB::table('subscriptions')
@@ -130,60 +130,142 @@
                                     $expiration = $isExpired ? 'N/A' : $subscription->expiration;
                                 @endphp
 
-                                <div class="card" style="border-radius: 20px; border: none; background: linear-gradient(145deg, #2b1349, #7138a9); 
-                                     box-shadow: 0 8px 15px rgba(255, 255, 255, 0.3); padding: 20px; margin-bottom: 20px;">
-                                    <div style="display: flex; flex-direction: column; align-items: center;">
-                                        <h2 style="color: white; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; text-decoration: underline; text-align: center;">
-                                            {{ $subscription_type }}
-                                        </h2>
-                                        <div style="width: 100%; text-align: center;">
-                                            <p style="color: white; font-size: 1.5rem; margin: 0;">
-                                                <strong>Amount: ₱</strong>{{ $amount }}
-                                            </p>
-                                            <p style="color: white; font-size: 1.5rem; margin: 0;">
-                                                <strong>Date Availed:</strong> {{ $date }}
-                                            </p>
-                                            <p style="color: white; font-size: 1.5rem; margin: 0;">
-                                                <strong>Expiration:</strong> {{ $expiration }}
-                                            </p>
+                                <!-- Subscription Status Card -->
+                                <div style="background: rgba(255,255,255,0.95); border-radius: 16px; padding: 24px; margin-bottom: 24px; 
+                                           backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2);">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                                        <div>
+                                            <h1 style="color: #1a1a1a; font-size: 1.8rem; font-weight: 700; margin: 0; letter-spacing: -0.02em;">
+                                                {{ $subscription_type }}
+                                            </h1>
+                                            <p style="color: #666; font-size: 0.9rem; margin: 4px 0 0 0;">Current subscription plan</p>
+                                        </div>
+                                        <div style="width: 50px; height: 50px; background: #667eea; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px;">
+                                        <div style="background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #e2e8f0;">
+                                            <div style="color: #64748b; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                                Amount Paid
+                                            </div>
+                                            <div style="color: #0f172a; font-size: 1.25rem; font-weight: 700; line-height: 1;">
+                                                ₱{{ $amount }}
+                                            </div>
+                                        </div>
+                                        <div style="background: #f0fdf4; border-radius: 12px; padding: 16px; border: 1px solid #bbf7d0;">
+                                            <div style="color: #166534; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                                Started
+                                            </div>
+                                            <div style="color: #0f172a; font-size: 1.25rem; font-weight: 700; line-height: 1;">
+                                                {{ $date }}
+                                            </div>
+                                        </div>
+                                        <div style="background: #fef2f2; border-radius: 12px; padding: 16px; border: 1px solid #fecaca;">
+                                            <div style="color: #991b1b; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                                                Expires
+                                            </div>
+                                            <div style="color: #0f172a; font-size: 1.25rem; font-weight: 700; line-height: 1;">
+                                                {{ $expiration }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             @endif
 
-                            <!-- Profile Form Card Start -->
-                            <div class="card" style="border-radius: 20px; border: none; background: linear-gradient(145deg, #2b1349, #7138a9); 
-                                 box-shadow: 0 8px 15px rgba(255, 255, 255, 0.3); padding: 20px; margin-top: 20px;">
-                                <h2 style="color: white; text-align: center; ">Profile Update</h2>
-                                  @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
-                                <form action="/user/profile-update" method="POST" >
+                            <!-- Profile Update Form -->
+                            <div style="background: rgba(255,255,255,0.95); border-radius: 16px; padding: 24px; 
+                                       backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2);">
+                                <div style="text-align: center; margin-bottom: 24px;">
+                                    <h2 style="color: #1a1a1a; font-size: 1.5rem; font-weight: 700; margin: 0; letter-spacing: -0.02em;">
+                                        Update Profile
+                                    </h2>
+                                    <p style="color: #666; font-size: 0.9rem; margin: 6px 0 0 0;">Keep your information up to date</p>
+                                </div>
+
+                                @if(session('success'))
+                                    <div style="background: #10b981; color: white; border-radius: 12px; padding: 16px 20px; margin-bottom: 32px; 
+                                               display: flex; align-items: center; gap: 12px;">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9 12l2 2 4-4"/>
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                        {{ session('success') }}
+                                    </div>
+                                @endif
+
+                                <form action="/user/profile-update" method="POST">
                                     @csrf
-                                    <div class="form-group">
-                                        <label for="name" style="color: white;">Name:</label>
-                                        <input type="text" name="name" id="name" class="form-control" value="{{ Auth::user()->name }}" required>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                                        <div>
+                                            <label for="name" style="color: #374151; font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                Full Name
+                                            </label>
+                                            <input type="text" name="name" id="name" value="{{ Auth::user()->name }}" required
+                                                   style="width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; 
+                                                         background: #f9fafb; transition: all 0.2s; outline: none;"
+                                                   onfocus="this.style.borderColor='#667eea'; this.style.background='#ffffff';"
+                                                   onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
+                                        </div>
+                                        <div>
+                                            <label for="email" style="color: #374151; font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                Email Address
+                                            </label>
+                                            <input type="email" name="email" id="email" value="{{ Auth::user()->email }}" required
+                                                   style="width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; 
+                                                         background: #f9fafb; transition: all 0.2s; outline: none;"
+                                                   onfocus="this.style.borderColor='#667eea'; this.style.background='#ffffff';"
+                                                   onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label for="email" style="color: white;">Email:</label>
-                                        <input type="email" name="email" id="email" class="form-control" value="{{ Auth::user()->email }}" required>
+
+                                    <div style="margin-bottom: 16px;">
+                                        <label for="address" style="color: #374151; font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            Address
+                                        </label>
+                                        <input type="text" name="address" id="address" value="{{ Auth::user()->address }}" required
+                                               style="width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; 
+                                                     background: #f9fafb; transition: all 0.2s; outline: none;"
+                                               onfocus="this.style.borderColor='#667eea'; this.style.background='#ffffff';"
+                                               onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
                                     </div>
-                                       <div class="form-group">
-                                        <label for="address" style="color: white;">Address:</label>
-                                        <input type="text" name="address" id="address" class="form-control" value="{{ Auth::user()->address }}" required>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+                                        <div>
+                                            <label for="mobile" style="color: #374151; font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                Mobile Number
+                                            </label>
+                                            <input type="text" name="mobile" id="mobile" value="{{ Auth::user()->mobile }}" required
+                                                   style="width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; 
+                                                         background: #f9fafb; transition: all 0.2s; outline: none;"
+                                                   onfocus="this.style.borderColor='#667eea'; this.style.background='#ffffff';"
+                                                   onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
+                                        </div>
+                                        <div>
+                                            <label for="password" style="color: #374151; font-weight: 600; margin-bottom: 6px; display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                                New Password
+                                            </label>
+                                            <input type="password" name="password" id="password" placeholder="Leave blank to keep current"
+                                                   style="width: 100%; border: 2px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; 
+                                                         background: #f9fafb; transition: all 0.2s; outline: none;"
+                                                   onfocus="this.style.borderColor='#667eea'; this.style.background='#ffffff';"
+                                                   onblur="this.style.borderColor='#e5e7eb'; this.style.background='#f9fafb';">
+                                        </div>
                                     </div>
-                                       <div class="form-group">
-                                        <label for="mobile" style="color: white;">Mobile:</label>
-                                        <input type="text" name="mobile" id="mobile" class="form-control" value="{{ Auth::user()->mobile }}" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="password" style="color: white;">Password:</label>
-                                        <input type="password" name="password" id="password" class="form-control" placeholder="Leave blank to keep current password">
-                                    </div>
-                                    <button type="submit" class="btn btn-primary" style="width: 100%; background-color: #7138a9; border: none;">Update Profile</button>
+
+                                    <button type="submit" 
+                                            style="width: 100%; background: #667eea; color: white; border: none; border-radius: 8px; 
+                                                  padding: 14px 20px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+                                                  text-transform: uppercase; letter-spacing: 0.5px;"
+                                            onmouseover="this.style.background='#5a67d8'; this.style.transform='translateY(-1px)';"
+                                            onmouseout="this.style.background='#667eea'; this.style.transform='translateY(0)';">
+                                        Update Profile
+                                    </button>
                                 </form>
                             </div>
-                            <!-- Profile Form Card End -->
                         </div>
                     </div>
                 </div>
@@ -193,18 +275,13 @@
     </main>
 
     <!-- Footer Start -->
-    <footer>
-        <div class="footer-area footer-padding">
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-xl-6 col-lg-6">
-                        <div class="footer-copy-right">
-                            <p>
-                                © 2024 KnowTest. All rights reserved.
-                            </p>
-                        </div>
-                    </div>
-                </div>
+    <footer style="background: rgba(0,0,0,0.2); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.2); 
+                   padding: 20px 0; margin-top: auto;">
+        <div class="container">
+            <div style="text-align: center;">
+                <p style="color: #ffffff; font-size: 0.95rem; margin: 0; font-weight: 400;">
+                    © 2024 KnowTest. All rights reserved.
+                </p>
             </div>
         </div>
     </footer>

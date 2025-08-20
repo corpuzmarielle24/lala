@@ -18,6 +18,33 @@ yarn-error.log
 /.idea
 /.vscode
 
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.cache
+
+# IDE files
+*.swp
+*.swo
+*~
+
+# Archives
+*.zip
+*.rar
+*.tar.gz
+*.7z
+
+# Custom files to ignore
 .knowtest.zip
 .quiz.zip
 .admin-2-announcement-1701246220.mp4

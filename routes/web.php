@@ -15,16 +15,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\PayPalController;
 use App\Http\Controllers\ProfileController;
-
-Route::get('/test-cohere', [PdfController::class, 'testCohereApi']);
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Http\Request;
 
 // Route to display the upload form
 Route::get('/upload-pdf-form', function () {
     return view('upload_pdf');
-})->name('upload.pdf.form');
+})->name('upload.pdf.form')->middleware('auth');
 
 // Route to handle the PDF upload and conversion to text
-Route::post('/upload-pdf', [PdfController::class, 'uploadPdf'])->name('upload.pdf');
+Route::post('/upload-pdf', [PdfController::class, 'uploadPdf'])->name('upload.pdf')->middleware('auth');
 
 
 
@@ -32,7 +34,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+Auth::routes(['verify' => false]);
 
 Route::resource('report', '\App\Http\Controllers\ReportController');
 Route::get('view/{id}', '\App\Http\Controllers\ViewController@index');
@@ -81,7 +83,11 @@ Route::prefix('user')->group(function () {
 });
 
 
-Route::get('/paypal', [PayPalController::class, 'createPayment'])->name('paypal.create');
+// Temporary test payment (bypasses PayPal)
+Route::post('/test-payment', [\App\Http\Controllers\TestPaymentController::class, 'createPayment'])->name('test.payment');
+
+// PayPal routes with real sandbox credentials
+Route::post('/paypal', [PayPalController::class, 'createPayment'])->name('paypal.create');
 Route::get('/paypal/success', [PayPalController::class, 'executePayment'])->name('paypal.success');
 Route::get('/paypal/cancel', [PayPalController::class, 'cancelPayment'])->name('paypal.cancel');
 
@@ -89,4 +95,3 @@ Route::get('/paypal/cancel', [PayPalController::class, 'cancelPayment'])->name('
 Route::resource('logout', '\App\Http\Controllers\LogoutController');
 
 Route::get('/download-pdf', [PdfController::class, 'generatePdf']);
-

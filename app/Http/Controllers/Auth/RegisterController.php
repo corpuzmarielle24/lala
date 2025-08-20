@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class RegisterController extends Controller
 {
@@ -51,10 +52,10 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'password' => [
-                'required'
-            ],
-            
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'mobile' => ['nullable', 'string', 'max:20'],
         ]);
     }
 
@@ -66,29 +67,36 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
+        try {
+            $request = app('request');
 
-        $request = app('request');
+            // if($request->hasfile('image')){
+            //     $file = $request->file('image');
+            //     $extension = $file->getClientOriginalExtension();
+            //     $origname = $file->getClientOriginalName();
+            //     // $user1 = auth()->user()->name.'-'.auth()->user()->id;
+            //     $filename = 'id-image'.time().'.'.$extension;
+            //     $file->move('uploads/id_image/', $filename);
+            // }
 
-        // if($request->hasfile('image')){
-        //     $file = $request->file('image');
-        //     $extension = $file->getClientOriginalExtension();
-        //     $origname = $file->getClientOriginalName();
-        //     // $user1 = auth()->user()->name.'-'.auth()->user()->id;
-        //     $filename = 'id-image'.time().'.'.$extension;
-        //     $file->move('uploads/id_image/', $filename);
-        // }
-
-        return User::create([
-            'name' => $data['name'],
-            // 'username' => $data['username'],
-            'password' => Hash::make($data['password']),
-            // 'id_image' => $filename,
-            'address' => $data['address'],
-            'mobile' => $data['mobile'],
-            // 'birthdate' => $data['birthdate'],
-            // 'gender' => $data['gender'],
-            'email' => $data['email'],
-
-        ]);
+            return User::create([
+                'name' => $data['name'],
+                // 'username' => $data['username'],
+                'password' => Hash::make($data['password']),
+                // 'id_image' => $filename,
+                'address' => isset($data['address']) ? $data['address'] : null,
+                'mobile' => isset($data['mobile']) ? $data['mobile'] : null,
+                // 'birthdate' => $data['birthdate'],
+                // 'gender' => $data['gender'],
+                'email' => $data['email'],
+                'is_approved' => 1, // Auto-approve new users
+                'role' => 1, // Default role for regular users
+                'email_verified_at' => now(), // Auto-verify email
+            ]);
+        } catch (\Exception $e) {
+            // Log the error and redirect back with error message
+            Log::error('Registration failed: ' . $e->getMessage());
+            throw new \Exception('Registration failed. Please ensure the database is properly configured.');
+        }
     }
 }

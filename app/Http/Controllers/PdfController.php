@@ -6,6 +6,7 @@ use Smalot\PdfParser\Parser;
 use GuzzleHttp\Client as HttpClient;
 use PDF;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PdfController extends Controller
 {
@@ -24,15 +25,15 @@ class PdfController extends Controller
 
 public function uploadPdf(Request $request)
 {
-    // Validate the uploaded file
-    $request->validate([
-        'pdf' => 'required|mimes:pdf|max:10000',
-    ]);
+    try {
+        // Validate the uploaded file
+        $request->validate([
+            'pdf' => 'required|mimes:pdf|max:10000',
+        ]);
 
-    // Get the authenticated user
-    $user = auth()->user();
-
-    // Retrieve the most recent subscription information
+        // Get the authenticated user with fresh data
+        $userId = auth()->id();
+        $user = \App\Models\User::find($userId);    // Retrieve the most recent subscription information
     $subscription = DB::table('subscriptions')
         ->where('user_id', $user->id)
         ->orderBy('date', 'desc') // Get the latest subscription
@@ -83,7 +84,7 @@ public function uploadPdf(Request $request)
     $pdfFile = $request->file('pdf');
 
     // Parse the PDF file to text
-    $parser = new \Smalot\PdfParser\Parser(); // Ensure parser is correctly referenced
+    $parser = new \Smalot\PdfParser\Parser();
     try {
         $pdf = $parser->parseFile($pdfFile->getPathname());
         $text = $pdf->getText();
@@ -96,10 +97,16 @@ public function uploadPdf(Request $request)
 
     // Check if reviewers are generated
     if (empty($result['reviewers'])) {
-        return redirect()->back()->with('error', 'Internet connection issues, make sure you have internet and try again.');
+        $errorMsg = 'Failed to generate content. ';
+        if (isset($result['error'])) {
+            $errorMsg .= 'Error: ' . $result['error'];
+        } else {
+            $errorMsg .= 'This could be due to: API key issues, rate limiting, or model availability. Check logs for details.';
+        }
+        return redirect()->back()->with('error', $errorMsg);
     }else{
-            // Update the user's generate_no and generate_date in the database
-    $user->generate_no = $generateNo;
+        // Update the user's generate_no and generate_date in the database
+        $user->generate_no = $generateNo;
     $user->save();
     }
 
@@ -111,6 +118,14 @@ public function uploadPdf(Request $request)
         'qaPairs' => $result['qaPairs'],
         'reviewers' => $result['reviewers']
     ]);
+    
+    } catch (\Exception $e) {
+        Log::error('❌ FATAL ERROR in uploadPdf: ' . $e->getMessage());
+        Log::error('Error file: ' . $e->getFile() . ':' . $e->getLine());
+        Log::error('Stack trace: ' . $e->getTraceAsString());
+        
+        return redirect()->back()->with('error', 'Upload failed: ' . $e->getMessage() . ' (Check logs for details)');
+    }
 }
 
 protected function generateQuestionsAndAnswers($text)
@@ -138,9 +153,12 @@ protected function generateQuestionsAndAnswers($text)
     }
 
     try {
+        // Use a model that works with generate API
+        $model = 'command'; // Changed from command-xlarge-nightly
+        
         $response = $this->cohereClient->post('v1/generate', [
             'json' => [
-                'model' => 'command-xlarge-nightly',
+                'model' => $model,
                 'prompt' => "Generate exactly $maxItems reviewers in the format 'Reviewer 1: [Reviewer Topic] - [Note about Topic]'. Using the exact same reviewers and their notes, generate a list of questions and answers where each question corresponds to the note and each answer to the reviewer topic. The format should be 'Question 1: [Note about Topic]' and 'Answer 1: [Reviewer Topic]'. Maintain consistency in numbering and alignment with the content in $text.",
                 'max_tokens' => 3500,
             ],
@@ -201,6 +219,10 @@ protected function generateQuestionsAndAnswers($text)
             'reviewers' => $reviewers,
         ];
     } catch (\Exception $e) {
+        Log::error('❌ Cohere API Error: ' . $e->getMessage());
+        Log::error('Error Code: ' . $e->getCode());
+        Log::error('Response Body: ' . (isset($response) ? $response->getBody() : 'No response'));
+        
         return [
             'qaPairs' => [],
             'reviewers' => [],
@@ -228,6 +250,8 @@ protected function generateQuestionsAndAnswers($text)
         // Download the PDF
         return $pdf->download('questions_and_answers.pdf');
     }
+
+
     
 
 

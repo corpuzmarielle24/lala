@@ -1,0 +1,205 @@
+/* Sophisticated Dark Theme for KnowTest */
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --primary-light: #6366f1;
+    --secondary-color: #1f2937;
+    --accent-color: #111827;
+    --background-light: #ffffff;
+    --text-primary: #111827;
+    --text-secondary: #6b7280;
+    --border-color: #e5e7eb;
+    --card-bg: #ffffff;
+    --success-color: #10b981;
+    --gradient-start: #4f46e5;
+    --gradient-end: #7c3aed;
+}
+
+/* Minimal professional touches - keep original colors mostly */
+.borders-btn {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    padding: 12px 32px !important;
+    font-size: 14px !important;
+    letter-spacing: 0.025em !important;
+    transition: all 0.2s ease !important;
+}
+
+.borders-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(240, 103, 255, 0.3) !important;
+}
+
+/* Update navigation hover effects */
+.main-header .main-menu ul li a::after {
+    background: var(--primary-color) !important;
+}
+
+.main-header .main-menu ul li:hover > a {
+    color: var(--primary-color) !important;
+}
+
+/* Update scroll to top button */
+#scrollUp,
+#back-top {
+    background: var(--primary-color) !important;
+}
+
+/* Update form elements */
+.login-form .form-input input::placeholder {
+    color: var(--primary-color) !important;
+}
+
+.login-form .form-input input[type="submit"] {
+    background: var(--primary-color) !important;
+}
+
+.login-form .form-input input[type="submit"]:hover {
+    background: var(--primary-hover) !important;
+}
+
+/* Update footer social icons */
+.footer-social > a:hover {
+    background: var(--primary-color) !important;
+}
+
+/* Update preloader */
+.preloader .preloader-circle {
+    border-top-color: var(--primary-color) !important;
+}
+
+/* Update pricing cards */
+.pricing-card-area .single-card .card-mid h4 {
+    color: var(--primary-color) !important;
+}
+
+/* Update blog elements */
+.home-blog-area .home-blog-single .blog-img-cap .blog-cap h3 a:hover {
+    color: var(--primary-color) !important;
+}
+
+/* Keep header transparent/dark */
+.header-sticky.sticky-bar {
+    background: rgba(31, 41, 55, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+/* Update mobile menu */
+.mobile_menu .slicknav_menu .slicknav_nav {
+    background: var(--primary-color) !important;
+}
+
+.mobile_menu .slicknav_menu .slicknav_nav a:hover {
+    color: var(--primary-light) !important;
+}
+
+/* Update testimonial background */
+.testimonial-area .single-testimonial {
+    background: var(--primary-color) !important;
+}
+
+/* Update link hovers */
+.footer-area .footer-tittle ul li a:hover {
+    color: var(--primary-light) !important;
+}
+
+/* Update form focus states */
+.form-contact .form-control:focus {
+    border-color: var(--primary-color) !important;
+}
+
+/* Update hero section colors */
+.slider-area .hero__caption span {
+    color: var(--primary-light) !important;
+}
+
+/* Modern card styling improvements */
+.pricing-card-area .single-card {
+    box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1) !important;
+    border: 1px solid var(--border-color) !important;
+    transition: all 0.3s ease !important;
+}
+
+.pricing-card-area .single-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Keep existing backgrounds */
+body {
+    background-color: #ffffff !important;
+}
+
+/* Don't change the hero section background */
+.pricing-card-area::before {
+    background: #2d0a31 !important;
+}
+
+/* Update section titles */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-primary) !important;
+}
+
+.section-tittle h2 {
+    color: white !important;
+}
+
+.section-tittle2 h2 {
+    color: var(--text-primary) !important;
+}
+
+/* Clean modern spacing */
+.section-padding {
+    padding-top: 100px !important;
+    padding-bottom: 100px !important;
+}
+
+/* Subtle professional improvements */
+.pricing-card-area .single-card {
+    background: #ffffff !important;
+    border: 1px solid #f1f5f9 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.3s ease !important;
+}
+
+.pricing-card-area .single-card:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+        0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Subtle button improvements without changing colors */
+.borders-btn {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    transition: all 0.2s ease !important;
+}
+
+.borders-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Clean card typography */
+.pricing-card-area .single-card .card-top h4 {
+    font-weight: 600 !important;
+    color: #1f2937 !important;
+}
+
+.pricing-card-area .single-card .card-mid h4 {
+    color: #7c3aed !important;
+    font-weight: 700 !important;
+}
+
+.pricing-card-area .single-card .card-bottom ul li {
+    color: #4b5563 !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+}

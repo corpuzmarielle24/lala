@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('resevations', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('address')->nullable();
+            $table->string('mobile')->nullable();
         });
     }
 
@@ -22,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('resevations');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['address', 'mobile']);
+        });
     }
 };

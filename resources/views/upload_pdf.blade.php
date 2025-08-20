@@ -117,63 +117,142 @@
             
             @php
                 // Get the authenticated user
-                $user= auth()->user();
+                $user = auth()->user();
+                $subscription = null;
+                $maxGenerations = 3; // Default for free users
         
-                // Retrieve the most recent subscription information
-                $subscription = DB::table('subscriptions')
-                    ->where('user_id', $user->id)
-                    ->orderBy('id', 'desc') // Get the latest subscription
-                    ->first();
+                // Only check subscription if user is authenticated
+                if ($user) {
+                    // Retrieve the most recent subscription information
+                    $subscription = DB::table('subscriptions')
+                        ->where('user_id', $user->id)
+                        ->orderBy('id', 'desc') // Get the latest subscription
+                        ->first();
                     
-
-                // Determine the max number of generations allowed based on the subscription type
-                $maxGenerations = 3; // Default for users without a plan
-                if ($subscription) {
-                    switch ($subscription->subscription_type) {
-                        case 'Basic Plan':
-                            $maxGenerations = 10;
-                            break;
-                        case 'Professional Plan':
-                            $maxGenerations = 20;
-                            break;
-                        case 'Elite Plan':
-                            $maxGenerations = PHP_INT_MAX; // Unlimited
-                            break;
+                    // Determine the max number of generations allowed based on the subscription type
+                    if ($subscription) {
+                        switch ($subscription->subscription_type) {
+                            case 'Basic Plan':
+                                $maxGenerations = 10;
+                                break;
+                            case 'Professional Plan':
+                                $maxGenerations = 20;
+                                break;
+                            case 'Elite Plan':
+                                $maxGenerations = PHP_INT_MAX; // Unlimited
+                                break;
+                        }
                     }
-                }else{
-                  $maxGenerations = 3;
-                  }
 
-                // Check the user's generation details
-                $generateNo = $user->generate_no ?? 0;
+                    // Check the user's generation details
+                    $generateNo = $user->generate_no ?? 0;
 
-                // Calculate remaining uploads
-                  if ($subscription) {
-                    if($subscription->subscription_type == 'Elite Plan'){
-                      $remainingUploads = 'Unlimited';
-                    }else{
-                      $remainingUploads = max(0, $maxGenerations - $generateNo);
+                    // Calculate remaining uploads
+                    if ($subscription && $subscription->subscription_type == 'Elite Plan') {
+                        $remainingUploads = 'Unlimited';
+                    } else {
+                        $remainingUploads = max(0, $maxGenerations - $generateNo);
                     }
-                }else{
-                 $remainingUploads = max(0, $maxGenerations - $generateNo);
-                 }
+                } else {
+                    // User not authenticated, set defaults
+                    $generateNo = 0;
+                    $remainingUploads = $maxGenerations;
+                }
                 
               
             @endphp
             
-            <form action="{{ route('upload.pdf') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('upload.pdf') }}" method="POST" enctype="multipart/form-data" id="upload-form">
                 @csrf
                 <label for="pdf-upload">Choose File</label>
                 <input type="file" id="pdf-upload" name="pdf" accept="application/pdf" required>
-                <button type="submit" class="btn btn-upload">Upload PDF</button>
+                
+                <!-- File Preview Section -->
+                <div id="file-preview" style="margin: 15px 0; display: none; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <h4>Selected File:</h4>
+                    <p><strong>Name:</strong> <span id="file-name"></span></p>
+                    <p><strong>Size:</strong> <span id="file-size"></span></p>
+                    <p><strong>Type:</strong> <span id="file-type"></span></p>
+                    <p><strong>Last Modified:</strong> <span id="file-date"></span></p>
+                </div>
+                
+                <button type="submit" class="btn btn-upload" id="upload-btn">Upload PDF</button>
             </form>
             <p class="note">Note: Only PDF files are allowed for upload.</p>
             <p class="remaining-uploads">Remaining uploads: {{ $remainingUploads }}</p> <!-- Display remaining uploads -->
+            
+            <!-- Debug Console -->
+            <div id="debug-console" style="margin-top: 20px; display: none; background: #f1f1f1; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; color: #333;">
+                <h4>Debug Log:</h4>
+                <div id="debug-messages"></div>
+            </div>
         </div>
     </div>
 
     <!-- Bootstrap JS (Optional) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    
+    <script>
+        // File input change handler for file preview
+        document.getElementById('pdf-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const preview = document.getElementById('file-preview');
+            
+            if (file) {
+                // Show file details
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-size').textContent = formatFileSize(file.size);
+                document.getElementById('file-type').textContent = file.type || 'Unknown';
+                document.getElementById('file-date').textContent = new Date(file.lastModified).toLocaleString();
+                
+                preview.style.display = 'block';
+                
+                // Validate file
+                if (file.type !== 'application/pdf') {
+                    alert('Please select a PDF file only!');
+                    this.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+                
+                if (file.size > 10 * 1024 * 1024) { // 10MB
+                    alert('File is too large! Maximum size is 10MB.');
+                    this.value = '';
+                    preview.style.display = 'none';
+                    return;
+                }
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+        
+        // Form submission handler
+        document.getElementById('upload-form').addEventListener('submit', function(e) {
+            const file = document.getElementById('pdf-upload').files[0];
+            
+            if (!file) {
+                alert('Please select a PDF file first!');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Show loading state
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.textContent = 'Uploading...';
+            uploadBtn.disabled = true;
+        });
+        
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+    </script>
 </body>
 </html>

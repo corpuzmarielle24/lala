@@ -11,37 +11,54 @@ class PayPalController extends Controller
 {
     public function createPayment(Request $request)
     {
-        // Create PayPal client and set credentials
-        $provider = new PayPalClient;
-        $provider->setApiCredentials(config('paypal'));
-        $provider->getAccessToken();
+        try {
+            // Create PayPal client and set credentials
+            $provider = new PayPalClient;
+            $provider->setApiCredentials(config('paypal'));
+            $token = $provider->getAccessToken();
+            
+            if (!$token) {
+                return redirect('/')->with('error', 'PayPal authentication failed. Please check configuration.');
+            }
 
-        // Create an order
-        $response = $provider->createOrder([
-            "intent" => "CAPTURE",
-            "application_context" => [
-                "return_url" => route('paypal.success'),
-                "cancel_url" => route('paypal.cancel'),
-            ],
-            "purchase_units" => [
-                [
-                    "amount" => [
-                        "currency_code" => "PHP",
-                        "value" => $request->input('amount'), // Use dynamic amount
+            // Create an order
+            $response = $provider->createOrder([
+                "intent" => "CAPTURE",
+                "application_context" => [
+                    "return_url" => route('paypal.success'),
+                    "cancel_url" => route('paypal.cancel'),
+                ],
+                "purchase_units" => [
+                    [
+                        "amount" => [
+                            "currency_code" => "USD", // PayPal works better with USD
+                            "value" => number_format($request->input('amount') / 56, 2), // Convert PHP to USD (1 USD ≈ 56 PHP)
+                        ]
                     ]
                 ]
-            ]
-        ]);
+            ]);
 
-        // Check if the payment creation was successful
-        if (isset($response['id'])) {
-            foreach ($response['links'] as $link) {
-                if ($link['rel'] === 'approve') {
-                    // Store necessary information in session
-                    session(['paypal_order_id' => $response['id'], 'amount' => $request->input('amount'), 'subscription_type' => $request->input('subscription_type')]);
-                    return redirect($link['href']);
+            // Check if the payment creation was successful
+            if (isset($response['id'])) {
+                foreach ($response['links'] as $link) {
+                    if ($link['rel'] === 'approve') {
+                        // Store necessary information in session
+                        session([
+                            'paypal_order_id' => $response['id'], 
+                            'amount' => $request->input('amount'), 
+                            'subscription_type' => $request->input('subscription_type')
+                        ]);
+                        return redirect($link['href']);
+                    }
                 }
             }
+
+            // Log the response for debugging
+            \Log::error('PayPal Order Creation Failed', ['response' => $response]);
+            
+        } catch (\Exception $e) {
+            \Log::error('PayPal Error: ' . $e->getMessage());
+            return redirect('/')->with('error', 'PayPal service error: ' . $e->getMessage());
         }
 
         return redirect('/')->with('error', 'Subscription Not Successful. Please Try Again!');
@@ -65,20 +82,20 @@ class PayPalController extends Controller
             $table->user_id = auth()->user()->id;
             $table->save();
 
-
-DB::table('users')
-    ->where('id', auth()->user()->id)
-    ->update([
-        'generate_no' => 0,
-        'generate_date' => null,
-    ]);
+            DB::table('users')
+                ->where('id', auth()->user()->id)
+                ->update([
+                    'generate_no' => 0,
+                    'generate_date' => null,
+                ]);
+            
             // Clear session data
             session()->forget(['paypal_order_id', 'amount', 'subscription_type']);
 
             return redirect('/')->with('success', 'Successfully Subscribed!');
         }
 
-        return redirect('/')->with('error', 'Unable to create PayPal order. Please try again.');
+        return redirect('/')->with('error', 'Unable to complete PayPal payment. Please try again.');
     }
 
     public function cancelPayment()
